@@ -25,6 +25,16 @@
 
 演示源文件 tools/demo-source.html 故意公开，正式作品不能照此将明文上传。
 
+## 站长网页上传入口（单体 HTML，最多 60 MiB）
+
+- 上传工作台：https://mutiwangn.github.io/3d-science-lab/upload.html
+- 直接从电脑选择 HTML，填写标题、封面和作品解锁密码，即可在浏览器**本地加密**后通过 GitHub 官方 API 上传；原始 HTML 不提交。
+- 第一次使用需在 [GitHub 细粒度令牌页面](https://github.com/settings/personal-access-tokens/new) 创建专用令牌：资源所有者选 `mutiwangn`，只选 `3d-science-lab` 仓库，仓库权限仅开放 **Contents → Read and write**（Metadata 自动为读取），建议 30 天到期。每次打开工作台粘贴令牌，页面不会在持久化存储中保存。
+- 网页虽公开可访问，但只有具有仓库写入权限的令牌才能发布。**不要分享令牌，也不要将其写进 HTML、README 或 Notion**；令牌泄漏请立即在 GitHub 撤销。
+- 可以生成独立的随机口令；发布成功后用「复制 Notion 登记信息」按钮，手动登记到你的[私人密码台账](https://app.notion.com/p/9d44ca7a087c497abdd494c99abfc243)。暂不自动同步 Notion，正式口令不能仅保存于已关闭的上传页面。
+- GitHub 网页原生上传单文件限制 25 MiB。本站上传器使用 GitHub Git 数据 API 来提交加密文件，最高 60 MiB 源 HTML；加密 JSON 会因 Base64 膨胀。GitHub Pages 已发布站点最大 1 GB，若陆续积累较多大作品，应迁移密文到 Cloudflare R2 等对象存储，避免长期把 GitHub 作为大文件仓库。
+- 当前仅支持**单体 HTML**，不直接支持 ZIP/GLB 文件夹工程；本地模型/纹理/JS 必须先内嵌。若 HTML 引用了外部 HTTPS 资产，这些资产本身不会被此机制保护。
+
 ## 添加正式作品
 
 在安装 Node.js 20+ 的电脑上，从此仓库目录运行：
