@@ -123,6 +123,7 @@ function validate(info, file, cover) {
   if (!file.size || file.size > MAX_HTML) fail('HTML 文件必须大于 0 且不超过 60 MiB。');
   if (!info.title || info.title.length > 70) fail('请填写作品名称（不超过 70 字）。');
   if (!slugPattern(info.id)) fail('作品编号须为 2–64 位小写字母、数字和连字符。');
+  if (!['3D教师演示', '3D学生操作', '数字工具'].includes(info.type)) fail('请选择有效的作品类别。');
   if (info.password.length < 12) fail('作品解锁密码至少 12 个字符，建议使用随机生成。');
   if (!info.token) fail('请输入 GitHub 细粒度授权令牌。');
   if (cover) {
