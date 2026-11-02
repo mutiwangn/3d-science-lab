@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "algorithm": "AES-256-GCM",
+  "kdf": "PBKDF2-SHA256",
+  "iterations": 310000,
+  "salt": "pbTsbVpGJBRilzUH0ArqCA==",
+  "iv": "0UPe05CZ9vXaFKvQ",
+  "byteLength": 60728313,
+  "parts": [
+    "./encrypted/lab-20261102-94df6b/part-001.b64",
+    "./encrypted/lab-20261102-94df6b/part-002.b64",
+    "./encrypted/lab-20261102-94df6b/part-003.b64",
+    "./encrypted/lab-20261102-94df6b/part-004.b64",
+    "./encrypted/lab-20261102-94df6b/part-005.b64",
+    "./encrypted/lab-20261102-94df6b/part-006.b64",
+    "./encrypted/lab-20261102-94df6b/part-007.b64",
+    "./encrypted/lab-20261102-94df6b/part-008.b64",
+    "./encrypted/lab-20261102-94df6b/part-009.b64",
+    "./encrypted/lab-20261102-94df6b/part-010.b64",
+    "./encrypted/lab-20261102-94df6b/part-011.b64",
+    "./encrypted/lab-20261102-94df6b/part-012.b64",
+    "./encrypted/lab-20261102-94df6b/part-013.b64",
+    "./encrypted/lab-20261102-94df6b/part-014.b64",
+    "./encrypted/lab-20261102-94df6b/part-015.b64",
+    "./encrypted/lab-20261102-94df6b/part-016.b64",
+    "./encrypted/lab-20261102-94df6b/part-017.b64",
+    "./encrypted/lab-20261102-94df6b/part-018.b64",
+    "./encrypted/lab-20261102-94df6b/part-019.b64",
+    "./encrypted/lab-20261102-94df6b/part-020.b64"
+  ]
+}

@@ -8,5 +8,14 @@
     "cover": "./covers/demo-cube.svg",
     "file": "./encrypted/rotation-demo.json",
     "demo": true
+  },
+  {
+    "id": "lab-20261102-94df6b",
+    "title": "独轮车省力的秘密",
+    "grade": "五下2.2",
+    "description": "进入三维科学互动实验。",
+    "type": "3D教师演示",
+    "cover": "./covers/lab-20261102-94df6b.png",
+    "file": "./encrypted/lab-20261102-94df6b.json"
   }
 ]
