@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>三维旋转 · 加密解锁演示</title><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;color:#eaf9fa;background:#081923;font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif}
+#stage{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}#stage:active{cursor:grabbing}
+.info{position:absolute;top:clamp(20px,4vw,48px);left:clamp(20px,4vw,52px);pointer-events:none}.badge{font-size:12px;color:#88e8d6;font-weight:800;letter-spacing:.14em}.info h1{font-size:clamp(31px,4vw,56px);line-height:1.2;margin:13px 0 10px}.info p{font-size:clamp(15px,1.5vw,21px);color:#b3cdd1;margin:0}
+.bottom{position:absolute;left:clamp(20px,4vw,52px);right:clamp(20px,4vw,52px);bottom:clamp(20px,3vw,35px);display:flex;gap:20px;align-items:center;justify-content:space-between}
+.bottom p{margin:0;color:#a9c5ca;font-size:14px}.bottom button{border:1px solid #80decf70;background:#123644;color:#e7faf5;padding:12px 19px;border-radius:12px;font-size:15px;cursor:pointer}.bottom button:focus-visible{outline:3px solid #80decf}
+.fallback{position:absolute;inset:35% 12% auto;text-align:center;padding:24px;border:1px solid #e6aa8b;border-radius:12px;background:#2b2630;display:none}
+@media(max-width:600px){.bottom{flex-wrap:wrap}.info p{font-size:15px}}
+</style></head>
+<body><canvas id="stage" aria-label="可旋转的彩色三维立方体"></canvas>
+<div class="info"><div class="badge">MUTIW · 功能验证 DEMO</div><h1>从不同方向观察</h1><p>用鼠标或手指旋转立方体，发现六个面。</p></div>
+<div class="bottom"><p>拖动旋转 · 滚轮缩放</p><button id="play" type="button" aria-pressed="true">暂停自动旋转</button></div>
+<div class="fallback" id="fallback">当前设备无法启用 WebGL，请更换浏览器或检查硬件加速。</div>
+<script>
+(function(){
+'use strict';
+var canvas=document.getElementById('stage'),gl=canvas.getContext('webgl',{antialias:true,alpha:false});
+if(!gl){document.getElementById('fallback').style.display='block';return;}
+var vs='attribute vec3 aPosition;attribute vec3 aColor;uniform float uYaw;uniform float uPitch;uniform float uDist;uniform float uAspect;varying vec3 vColor;void main(){float cy=cos(uYaw),sy=sin(uYaw),cx=cos(uPitch),sx=sin(uPitch);vec3 q=vec3(aPosition.x*cy+aPosition.z*sy,aPosition.y,-aPosition.x*sy+aPosition.z*cy);q=vec3(q.x,q.y*cx-q.z*sx,q.y*sx+q.z*cx);q.z-=uDist;gl_Position=vec4(q.x*1.65/uAspect,q.y*1.65,-q.z*0.72-1.0,-q.z);vColor=aColor;}';
+var fs='precision mediump float;varying vec3 vColor;void main(){gl_FragColor=vec4(vColor,1.0);}';
+function shader(type,source){var s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
+var program=gl.createProgram();try{gl.attachShader(program,shader(gl.VERTEX_SHADER,vs));gl.attachShader(program,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(program);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));}catch(err){document.getElementById('fallback').textContent='三维场景初始化失败：'+err.message;document.getElementById('fallback').style.display='block';return;}
+gl.useProgram(program);
+var vertices=[],colors=[];
+function face(a,b,c,d,color){var pts=[a,b,c,a,c,d];for(var i=0;i<pts.length;i++){vertices.push.apply(vertices,pts[i]);colors.push.apply(colors,color);}}
+var n=-1,p=1;
+face([n,n,p],[p,n,p],[p,p,p],[n,p,p],[.22,.83,.75]);
+face([p,n,n],[n,n,n],[n,p,n],[p,p,n],[.24,.57,.86]);
+face([n,n,n],[n,n,p],[n,p,p],[n,p,n],[.96,.64,.40]);
+face([p,n,p],[p,n,n],[p,p,n],[p,p,p],[.70,.57,.94]);
+face([n,p,p],[p,p,p],[p,p,n],[n,p,n],[.97,.82,.48]);
+face([n,n,n],[p,n,n],[p,n,p],[n,n,p],[.33,.75,.58]);
+function buffer(loc,data){var b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.STATIC_DRAW);var attr=gl.getAttribLocation(program,loc);gl.enableVertexAttribArray(attr);gl.vertexAttribPointer(attr,3,gl.FLOAT,false,0,0);}
+buffer('aPosition',vertices);buffer('aColor',colors);
+var yaw=.38,pitch=-.3,dist=5.5,running=true,drag=false,lastX=0,lastY=0,lastTime=0;
+function resize(){var ratio=Math.min(window.devicePixelRatio||1,2),width=Math.round(canvas.clientWidth*ratio),height=Math.round(canvas.clientHeight*ratio);if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}gl.viewport(0,0,width,height);}
+function draw(time){resize();if(running)yaw+=Math.min(0.04,(time-lastTime)/1000*.28||0);lastTime=time;gl.clearColor(.035,.10,.14,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);gl.uniform1f(gl.getUniformLocation(program,'uYaw'),yaw);gl.uniform1f(gl.getUniformLocation(program,'uPitch'),pitch);gl.uniform1f(gl.getUniformLocation(program,'uDist'),dist);gl.uniform1f(gl.getUniformLocation(program,'uAspect'),canvas.width/Math.max(1,canvas.height));gl.drawArrays(gl.TRIANGLES,0,vertices.length/3);requestAnimationFrame(draw);}
+canvas.addEventListener('pointerdown',function(e){drag=true;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointermove',function(e){if(!drag)return;yaw+=(e.clientX-lastX)*.008;pitch=Math.max(-1.3,Math.min(1.3,pitch+(e.clientY-lastY)*.008));lastX=e.clientX;lastY=e.clientY;});
+canvas.addEventListener('pointerup',function(){drag=false;});canvas.addEventListener('pointercancel',function(){drag=false;});
+canvas.addEventListener('wheel',function(e){e.preventDefault();dist=Math.max(3.4,Math.min(10,dist+Math.sign(e.deltaY)*.32));},{passive:false});
+document.getElementById('play').addEventListener('click',function(){running=!running;this.textContent=running?'暂停自动旋转':'继续自动旋转';this.setAttribute('aria-pressed',String(running));});
+requestAnimationFrame(draw);
+})();
+</script></body></html>

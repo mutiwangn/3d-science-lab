@@ -1,0 +1,12 @@
+[
+  {
+    "id": "rotation-demo",
+    "title": "旋转立方体 · 解锁演示",
+    "grade": "功能演示 / DEMO",
+    "description": "试用作品口令、自由旋转、缩放与全屏，检验设备的三维交互能力。",
+    "type": "原生 WebGL",
+    "cover": "./covers/demo-cube.svg",
+    "file": "./encrypted/rotation-demo.json",
+    "demo": true
+  }
+]

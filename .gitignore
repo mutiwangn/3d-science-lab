@@ -1,0 +1,9 @@
+/originals/
+/private/
+/work-in-progress/
+*.glb
+*.gltf
+*.blend
+*.fbx
+*.obj
+*.zip

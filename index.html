@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071722">
+<meta name="description" content="MUTIW · 3D 科学互动实验室：小学科学原创三维教学互动作品。">
+<title>3D 科学互动实验室 · MUTIW</title>
+<style>
+:root{color-scheme:dark;--bg:#081722;--card:#142b39;--mint:#80e3d1;--line:#9ddbd42b;--text:#eef8f9;--muted:#a6bbc4;--gold:#e6c18c}
+*{box-sizing:border-box}html{scroll-behavior:smooth}[hidden]{display:none!important}
+body{margin:0;min-height:100vh;color:var(--text);font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;background:radial-gradient(ellipse at 72% 13%,#204c57 0,#0a1a28 50%,#071521 100%)}
+button,input{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--mint);outline-offset:3px}a{color:inherit;text-decoration:none}
+.wrap{width:min(1180px,calc(100% - 52px));margin:auto}
+.header{height:86px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:12px;font-size:18px;font-weight:900;letter-spacing:.07em}
+.logo svg{width:42px;height:42px;padding:8px;border:1px solid #8de2d260;border-radius:12px;background:#1a4851}
+.nav{display:flex;align-items:center;gap:20px;font-size:14px;color:#c0d3d9}.nav a:hover{color:var(--mint)}
+.nav .backlink{padding:10px 16px;border:1px solid #aadad33c;border-radius:99px;color:#e9f7f6}
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center;padding:75px 0 84px}
+.eyebrow{display:inline-flex;gap:10px;align-items:center;padding:9px 14px;color:#a7f3e3;border:1px solid #68d2ba5c;background:#4bbc9c19;border-radius:99px;font-size:12px;font-weight:800;letter-spacing:.13em}
+.eyebrow:before{content:"";width:7px;height:7px;background:var(--mint);border-radius:50%;box-shadow:0 0 12px var(--mint)}
+h1{margin:27px 0 22px;font-size:clamp(42px,5vw,70px);line-height:1.18;letter-spacing:-.045em}
+h1 em{font-style:normal;color:var(--mint)}
+.lead{max-width:600px;margin:0;color:#b1c9cf;font-size:clamp(16px,1.55vw,19px);line-height:1.95}
+.hero-actions{margin-top:36px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.primary{border:0;background:var(--mint);color:#052b2d;font-weight:900;border-radius:12px;padding:15px 26px;display:inline-block}
+.primary:hover{background:#b2ffee}.subnote{font-size:13px;color:#98b5bd}
+.art{height:380px;border-radius:28px;overflow:hidden;border:1px solid #8bdbc94a;background:#163643;position:relative;box-shadow:0 20px 70px #0006}
+.art img{width:100%;height:100%;object-fit:cover}.art .caption{position:absolute;bottom:20px;left:20px;background:#071c29cc;border:1px solid #a4ede15c;border-radius:12px;padding:11px 16px;backdrop-filter:blur(10px)}
+.art .caption strong{display:block;font-size:15px}.art .caption small{color:#a7c6cc}
+.library{padding-bottom:100px}.library-head{display:flex;align-items:end;justify-content:space-between;gap:20px;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:25px}
+.overline{font-size:12px;letter-spacing:.14em;color:var(--mint);font-weight:800;margin:0 0 9px}
+h2{font-size:clamp(25px,2.6vw,35px);margin:0;line-height:1.25}.count{font-size:14px;color:#9fb9c2}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.work{color:inherit;text-align:left;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:linear-gradient(140deg,#173543,#102331);padding:0;transition:transform .2s,border-color .2s,box-shadow .2s}
+.work:hover{transform:translateY(-5px);border-color:#7ce0d39c;box-shadow:0 24px 45px #0010188c}
+.cover{height:210px;position:relative;overflow:hidden;background:#1b3c4a}.cover img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s}.work:hover .cover img{transform:scale(1.045)}
+.tag{position:absolute;top:15px;right:15px;padding:8px 12px;font-size:12px;background:#071c2cda;border:1px solid #c0f3e56b;border-radius:99px;color:#f0f9f8}
+.work-body{padding:22px}.type{font-size:12px;color:var(--mint);font-weight:800;letter-spacing:.08em}.work h3{font-size:23px;line-height:1.3;margin:11px 0 10px}.description{font-size:14px;color:#afc1c8;line-height:1.75;margin:0;min-height:50px}
+.foot{display:flex;align-items:center;justify-content:space-between;color:#94aeb9;font-size:12px;margin-top:22px}.foot strong{color:var(--gold);font-size:13px}
+.empty{border:1px dashed #accdc750;border-radius:20px;text-align:center;color:var(--muted);padding:50px 20px;line-height:1.9}
+footer{padding:30px 0 40px;border-top:1px solid var(--line);display:flex;gap:15px;justify-content:space-between;color:#88a1ab;font-size:13px}footer strong{color:#d5eeeb}
+.shade{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:22px;background:#04121bdb;backdrop-filter:blur(9px)}
+.dialog{width:min(100%,430px);padding:30px;background:linear-gradient(145deg,#193846,#102330);border:1px solid #89e1d363;border-radius:25px;box-shadow:0 35px 95px #0009;position:relative}
+.x{border:0;background:#ffffff15;color:#f5ffff;border-radius:11px;font-size:23px;width:37px;height:37px;line-height:1}.dialog>.x{position:absolute;right:23px;top:23px}
+.lock-symbol{height:54px;width:54px;display:grid;place-items:center;border:1px solid #83e4d369;border-radius:17px;background:#78dac723;color:#8fe9d6;font-size:28px;margin-bottom:21px}
+.dialog h2{font-size:26px;padding-right:24px}.dialog p{font-size:14px;line-height:1.7;color:#aac4cc}
+.dialog label{font-size:13px;font-weight:800;display:block;margin:25px 0 10px}.passline{display:flex;gap:9px}
+.passline input{min-width:0;width:100%;height:53px;padding:0 14px;border:1px solid #9ac5c66b;border-radius:11px;background:#071e2d;color:white}.passline button{white-space:nowrap;padding:0 19px}
+.error{min-height:18px!important;margin:13px 0 0!important;color:#ffc0ac!important}.hint{color:#e5c58f!important;margin-top:5px!important;font-size:12px!important}
+.viewer{position:fixed;z-index:30;inset:0;background:#0c1a27;display:flex;flex-direction:column}.viewerbar{height:64px;background:#0b2531;display:flex;align-items:center;gap:14px;padding:0 17px;border-bottom:1px solid var(--line)}
+.viewerbar button{color:var(--text);background:#ffffff12;border:1px solid #ffffff20;padding:10px 14px;border-radius:10px}.viewerbar strong{font-size:16px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.spacer{flex:1}.viewer iframe{width:100%;flex:1;border:0;background:#0c2230}
+@media(max-width:950px){.hero{grid-template-columns:1fr;padding:55px 0 60px;gap:25px}.art{height:300px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.wrap{width:calc(100% - 32px)}.header{height:70px}.logo{font-size:15px}.nav a:first-child{display:none}.nav .backlink{font-size:12px;padding:9px}.hero{padding:42px 0 52px}.art{height:255px}.hero-actions{margin-top:25px}.grid{grid-template-columns:1fr}.cover{height:215px}footer{flex-direction:column}.viewerbar{padding:0 8px;gap:8px}.viewerbar button{padding:9px}.viewerbar strong{font-size:13px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="header">
+<a class="logo" href="./" aria-label="3D科学互动实验室首页"><svg viewBox="0 0 28 28" fill="none" stroke="#9df2df" stroke-width="1.6" stroke-linejoin="round"><path d="m14 2 10 6v12l-10 6L4 20V8z"/><path d="m4 8 10 6 10-6M14 14v12"/></svg><span>MUTIW <span style="color:#80e3d1">/</span> 3D LAB</span></a>
+<nav class="nav" aria-label="导航"><a href="#works">探索作品</a><a class="backlink" href="https://mutiwangn.github.io/AI-html/" target="_blank" rel="noopener">基础互动网页 ↗</a></nav>
+</header>
+<main>
+<section class="hero">
+<div><span class="eyebrow">小学科学 · 进阶互动资源</span><h1>把科学原理<br>变成<em>可探索的世界</em></h1><p class="lead">从三维模型到实验教学数字工具。旋转、拆解、操控、验证，让抽象的科学知识在课堂中真实可感。</p><div class="hero-actions"><a class="primary" href="#works">探索三维作品　↗</a><span class="subnote">原创设计 · 按作品独立授权</span></div></div>
+<div class="art" aria-hidden="true"><img src="./covers/demo-cube.svg" alt=""><div class="caption"><strong>观察 · 操作 · 解释</strong><small>让每一次触碰都有科学意义</small></div></div>
+</section>
+<section class="library" id="works" aria-label="三维互动作品"><div class="library-head"><div><p class="overline">INTERACTIVE COLLECTION</p><h2>三维互动作品</h2></div><span class="count" id="count">正在加载…</span></div><div class="grid" id="grid"></div><div class="empty" id="empty" hidden>作品正在准备中，敬请期待。</div></section>
+</main>
+<footer><div><strong>MUTIW · 3D SCIENCE LAB</strong><div style="margin-top:6px">面向小学科学课堂的原创互动探索</div></div><div>作品按独立口令授权 · 请尊重作者的创作成果</div></footer>
+</div>
+<div class="shade" id="shade" hidden>
+<section class="dialog" role="dialog" aria-modal="true" aria-labelledby="unlock-title">
+<button class="x" id="close" type="button" aria-label="关闭">×</button>
+<div class="lock-symbol" aria-hidden="true">♧</div><h2 id="unlock-title">解锁作品</h2><p>输入此作品的授权口令，即可进入互动实验。</p>
+<form id="form" autocomplete="off"><label for="password">作品口令</label><div class="passline"><input id="password" type="password" autocomplete="off" placeholder="请输入解锁口令" required spellcheck="false"><button class="primary" id="submit" type="submit">解锁</button></div><p class="error" id="error" role="status" aria-live="polite"></p><p class="hint" id="hint" hidden>演示口令：3D-DEMO-2026</p></form>
+</section></div>
+<section class="viewer" id="viewer" hidden aria-label="互动作品"><div class="viewerbar"><button id="back" type="button">← 返回</button><strong id="viewer-title"></strong><span class="spacer"></span><button id="fullscreen" type="button">⛶ 全屏</button></div><iframe id="frame" title="三维互动作品" allow="camera; microphone; autoplay; fullscreen" allowfullscreen></iframe></section>
+<script>
+(function(){
+'use strict';
+var grid=document.getElementById('grid'),shade=document.getElementById('shade'),viewer=document.getElementById('viewer');
+var password=document.getElementById('password'),error=document.getElementById('error'),submit=document.getElementById('submit');
+var frame=document.getElementById('frame'),active=null,previousFocus=null,busy=false;
+function el(tag,cls,text){var n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;}
+function validPath(s){return typeof s==='string'&&/^[a-zA-Z0-9_./-]+$/.test(s)&&!s.includes('..')&&!s.startsWith('/');}
+function render(items){
+grid.replaceChildren();var count=0;
+items.forEach(function(w){
+if(!w||typeof w.id!=='string'||!validPath(w.file)||!validPath(w.cover))return;
+count++;
+var card=el('button','work');card.type='button';card.setAttribute('aria-label','解锁：'+w.title);
+var cover=el('div','cover');var img=el('img');img.src=w.cover;img.alt='';img.loading='lazy';cover.append(img,el('span','tag','🔒 口令解锁'));
+var body=el('div','work-body');body.append(el('div','type',w.grade||'三维探究'),el('h3','',w.title||'未命名'),el('p','description',w.description||'点击进入互动探索'));
+var foot=el('div','foot');foot.append(el('span','',w.type||'3D 互动'),el('strong','','进入实验 ↗'));body.append(foot);card.append(cover,body);
+card.addEventListener('click',function(){previousFocus=card;openDialog(w);});grid.append(card);
+});
+document.getElementById('count').textContent=count+' 个作品';document.getElementById('empty').hidden=count>0;
+}
+function openDialog(w){active=w;busy=false;password.value='';error.textContent='';submit.disabled=false;submit.textContent='解锁';document.getElementById('unlock-title').textContent=w.title;document.getElementById('hint').hidden=!w.demo;shade.hidden=false;document.body.style.overflow='hidden';password.focus();}
+function closeDialog(){if(busy)return;shade.hidden=true;active=null;password.value='';document.body.style.overflow='';if(previousFocus)previousFocus.focus();}
+function bytes64(s){var raw=atob(s),arr=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)arr[i]=raw.charCodeAt(i);return arr;}
+async function decrypt(file,pwd){
+if(!window.crypto||!window.crypto.subtle)throw new Error('当前浏览器不支持安全解密，请通过 HTTPS 使用最新版浏览器。');
+var response=await fetch(file,{cache:'no-store'});if(!response.ok)throw new Error('作品文件无法加载，请检查网络。');
+var data=await response.json();
+if(data.version!==1||data.algorithm!=='AES-256-GCM'||data.kdf!=='PBKDF2-SHA256'||!Number.isInteger(data.iterations)||data.iterations<100000||data.iterations>1000000)throw new Error('作品加密格式不受支持。');
+var material=await crypto.subtle.importKey('raw',new TextEncoder().encode(pwd),'PBKDF2',false,['deriveKey']);
+var key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:bytes64(data.salt),iterations:data.iterations,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['decrypt']);
+var plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes64(data.iv),tagLength:128},key,bytes64(data.data));
+return new TextDecoder('utf-8',{fatal:true}).decode(plain);
+}
+function openViewer(markup,w){shade.hidden=true;password.value='';document.getElementById('viewer-title').textContent=w.title;viewer.hidden=false;frame.srcdoc=markup;active=null;document.title=w.title+' · MUTIW';}
+function closeViewer(){frame.removeAttribute('srcdoc');frame.src='about:blank';viewer.hidden=true;document.body.style.overflow='';document.title='3D 科学互动实验室 · MUTIW';if(previousFocus)previousFocus.focus();}
+document.getElementById('close').addEventListener('click',closeDialog);
+shade.addEventListener('click',function(e){if(e.target===shade)closeDialog();});
+document.getElementById('form').addEventListener('submit',async function(e){
+e.preventDefault();if(busy||!active)return;
+var w=active;busy=true;submit.disabled=true;submit.textContent='解锁中…';error.textContent='';
+try{var html=await decrypt(w.file,password.value);openViewer(html,w);}
+catch(ex){error.textContent=ex.name==='OperationError'?'口令不正确，请再试一次。':(ex.message||'解锁失败，请稍后重试。');password.focus();password.select();}
+finally{busy=false;submit.disabled=false;submit.textContent='解锁';}
+});
+document.getElementById('back').addEventListener('click',closeViewer);
+document.getElementById('fullscreen').addEventListener('click',function(){var fn=viewer.requestFullscreen||viewer.webkitRequestFullscreen;if(fn){var result=fn.call(viewer);if(result&&result.catch)result.catch(function(){});}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!shade.hidden)closeDialog();else if(e.key==='Escape'&&!viewer.hidden&&!document.fullscreenElement)closeViewer();});
+fetch('./catalog.json',{cache:'no-store'}).then(function(r){if(!r.ok)throw Error('catalog');return r.json();}).then(function(list){render(Array.isArray(list)?list:[]);}).catch(function(){grid.replaceChildren(el('div','empty','作品目录加载失败，请刷新重试。'));document.getElementById('count').textContent='加载失败';});
+})();
+</script>
+</body>
+</html>
