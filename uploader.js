@@ -78,12 +78,21 @@ async function github(token, path, method = 'GET', body = null) {
   try { payload = await response.json(); } catch (error) { /* Errors may be empty. */ }
   if (!response.ok) {
     const message = typeof payload?.message === 'string' ? payload.message : '请求失败';
+    const operation = method + ' ' + path.split('?')[0];
+    // GitHub returns this header on permission failures when CORS exposes it.
+    const requiredPermissions = response.headers.get('X-Accepted-GitHub-Permissions');
+    const isTokenPermissionError = response.status === 403
+      && /resource not accessible by personal access token/i.test(message);
     const advice = response.status === 401 ? '授权令牌无效或已过期。'
-      : response.status === 403 ? '没有写入权限、被限流，或令牌未授权此仓库。'
+      : isTokenPermissionError
+        ? '细粒度令牌权限不足：检查 Resource owner=mutiwangn、Selected repositories=3d-science-lab、Contents=Read and write。'
+      : response.status === 403 ? '访问被拒绝：请检查令牌授权、仓库权限或 GitHub 速率限制。'
       : response.status === 404 ? '找不到仓库或令牌无权访问。'
       : response.status === 409 || response.status === 422 ? '仓库可能在其他设备上刚被修改，请刷新页面并重试。'
       : '请稍后重试。';
-    fail('GitHub API ' + response.status + '：' + message.slice(0, 170) + '。' + advice);
+    const permissionHint = requiredPermissions ? ' 接口要求权限：' + requiredPermissions + '。' : '';
+    fail('GitHub API ' + response.status + '（' + operation + '）：' +
+      message.slice(0, 170) + '。' + permissionHint + ' ' + advice);
   }
   return payload;
 }
