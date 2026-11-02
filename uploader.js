@@ -6,6 +6,7 @@ const API = 'https://api.github.com';
 const REPO_API = API + '/repos/' + OWNER + '/' + REPO;
 const MAX_HTML = 60 * 1024 * 1024;
 const MAX_COVER = 2 * 1024 * 1024;
+const CHUNK_BYTES = 3 * 1024 * 1024; // Each GitHub API request stays around 4 MiB.
 const NOTION_URL = 'https://app.notion.com/p/9d44ca7a087c497abdd494c99abfc243';
 const $ = (id) => document.getElementById(id);
 const form = $('upload-form');
@@ -88,6 +89,7 @@ async function github(token, path, method = 'GET', body = null) {
         ? '细粒度令牌权限不足：检查 Resource owner=mutiwangn、Selected repositories=3d-science-lab、Contents=Read and write。'
       : response.status === 403 ? '访问被拒绝：请检查令牌授权、仓库权限或 GitHub 速率限制。'
       : response.status === 404 ? '找不到仓库或令牌无权访问。'
+      : response.status === 422 && /input was too large/i.test(message) ? 'GitHub 拒绝处理该分片，请记录失败的分片序号并联系维护者。'
       : response.status === 409 || response.status === 422 ? '仓库可能在其他设备上刚被修改，请刷新页面并重试。'
       : '请稍后重试。';
     const permissionHint = requiredPermissions ? ' 接口要求权限：' + requiredPermissions + '。' : '';
@@ -155,22 +157,32 @@ function inspectHtml(html) {
     $('file-hint').textContent = bytesLabel(fileInput.files[0].size) + ' · 含联网资源，请确认原创模型未放在公开链接';
   }
 }
-async function encryptHtml(html, password) {
+async function encryptHtml(html, password, id) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const material = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
   const key = await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:310000,hash:'SHA-256'}, material, {name:'AES-GCM',length:256}, false, ['encrypt']);
-  const cipher = await crypto.subtle.encrypt({name:'AES-GCM',iv,tagLength:128}, key, new TextEncoder().encode(html));
-  const record = {
-    version: 1,
+  const cipher = new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv,tagLength:128}, key, new TextEncoder().encode(html)));
+  const common = {
     algorithm: 'AES-256-GCM',
     kdf: 'PBKDF2-SHA256',
     iterations: 310000,
     salt: asBase64(salt),
-    iv: asBase64(iv),
-    data: asBase64(new Uint8Array(cipher))
+    iv: asBase64(iv)
   };
-  return JSON.stringify(record) + '\n';
+  if (cipher.length <= CHUNK_BYTES) {
+    return {manifest: JSON.stringify({version:1,...common,data:asBase64(cipher)}) + '\n', chunks:[]};
+  }
+  // Keep ciphertext encrypted as one authenticated AES-GCM message, only split its Base64 transport.
+  const parts = [];
+  const chunks = [];
+  for (let offset = 0, part = 1; offset < cipher.length; offset += CHUNK_BYTES, part++) {
+    const path = 'encrypted/' + id + '/part-' + String(part).padStart(3, '0') + '.b64';
+    parts.push('./' + path);
+    chunks.push({path, content:asBase64(cipher.subarray(offset, offset + CHUNK_BYTES)) + '\n'});
+  }
+  const manifest = JSON.stringify({version:2,...common,byteLength:cipher.length,parts}, null, 2) + '\n';
+  return {manifest, chunks};
 }
 async function createBlob(token, content, encoding = 'utf-8') {
   const result = await github(token, '/repos/' + OWNER + '/' + REPO + '/git/blobs', 'POST', {content, encoding});
@@ -222,15 +234,24 @@ async function publish(event) {
     setStage('2 / 5 · 在本机加密 HTML', '原始 HTML 不会进入 GitHub；大文件加密需要一点时间', 28);
     const html = await file.text();
     inspectHtml(html);
-    const encrypted = await encryptHtml(html, info.password);
-    // The public GitHub git blob must remain below 100 MiB.
-    if (new Blob([encrypted]).size >= 95 * 1024 * 1024) fail('加密结果超出安全上传范围，请缩小作品。');
-    setStage('3 / 5 · 上传加密文件', '正在传输密文，视网络情况可能需要几分钟；请保持页面打开', 48);
-    const encryptedSha = await createBlob(info.token, encrypted);
-    const treeEntries = [{path:'encrypted/' + info.id + '.json',mode:'100644',type:'blob',sha:encryptedSha}];
+    const encrypted = await encryptHtml(html, info.password, info.id);
+    if (new Blob([encrypted.manifest]).size > 8 * 1024 * 1024) fail('作品清单异常，请重新选择文件。');
+    const treeEntries = [];
+    for (let i = 0; i < encrypted.chunks.length; i++) {
+      const part = encrypted.chunks[i];
+      const current = i + 1, total = encrypted.chunks.length;
+      setStage('3 / 5 · 上传加密分片 ' + current + ' / ' + total,
+        '每次上传约 4 MiB 密文；可持续数分钟，请保持页面打开',
+        45 + Math.round(19 * current / total));
+      const sha = await createBlob(info.token, part.content);
+      treeEntries.push({path:part.path,mode:'100644',type:'blob',sha});
+    }
+    setStage('3 / 5 · 提交加密清单', '密文已分块上传，准备更新作品目录', 66);
+    const manifestSha = await createBlob(info.token, encrypted.manifest);
+    treeEntries.push({path:'encrypted/' + info.id + '.json',mode:'100644',type:'blob',sha:manifestSha});
     let coverPath = existingIndex >= 0 ? catalog[existingIndex].cover : './covers/demo-cube.svg';
     if (cover) {
-      setStage('3 / 5 · 上传公开封面', '仅封面会公开显示；请不要包含敏感信息', 60);
+      setStage('3 / 5 · 上传公开封面', '仅封面会公开显示；请不要包含敏感信息', 69);
       const suffix = cover.name.split('.').pop().toLowerCase().replace('jpeg','jpg');
       coverPath = './covers/' + info.id + '.' + suffix;
       const bytes = new Uint8Array(await cover.arrayBuffer());
@@ -248,7 +269,7 @@ async function publish(event) {
     };
     if (existingIndex !== -1) catalog[existingIndex] = work;
     else catalog.push(work);
-    setStage('4 / 5 · 更新作品目录', '将加密文件和公开目录合并为同一 GitHub 提交', 72);
+    setStage('4 / 5 · 更新作品目录', '将加密文件和公开目录合并为同一 GitHub 提交', 75);
     const catalogSha = await createBlob(info.token, JSON.stringify(catalog,null,2) + '\n');
     treeEntries.push({path:'catalog.json',mode:'100644',type:'blob',sha:catalogSha});
     const ref = await github(info.token,'/repos/' + OWNER + '/' + REPO + '/git/ref/heads/main');

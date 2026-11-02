@@ -9,7 +9,7 @@
 <meta name="referrer" content="no-referrer">
 <title>作品发布工作台 · MUTIW 3D LAB</title>
 <link rel="stylesheet" href="./uploader.css">
-<script src="./uploader.js?v=20261102-auth403-diagnostics" defer></script>
+<script src="./uploader.js?v=20261102-chunked-v2" defer></script>
 </head>
 <body>
 <div class="shell">
@@ -19,7 +19,7 @@
 </header>
 <main>
   <section class="intro">
-    <div><h1>发布新作品<span class="dot">.</span></h1><p>将完整的互动 HTML 在浏览器本地加密，再发布到 3D 科学实验室。原始作品文件不会上传到 GitHub。</p></div>
+    <div><h1>发布新作品<span class="dot">.</span></h1><p>将完整互动 HTML 在浏览器本地加密、自动分片上传到 3D 科学实验室。原始作品文件不会上传到 GitHub。</p></div>
     <div class="capacity"><strong>60 MiB</strong><span>单个 HTML 上限</span></div>
   </section>
   <form id="upload-form" autocomplete="off" novalidate>
@@ -67,7 +67,7 @@
   </form>
   <p class="bottom-note">仅支持已经内嵌资源的单体 HTML。请保留你电脑上的未加密原文件；GitHub Pages 整站容量有限，不适合作为大量大模型文件的长期存储。</p>
 </main>
-<footer><span>© MUTIW · 3D SCIENCE LAB</span><span>作品作者专用发布入口 · 诊断版 2026.11.02</span></footer>
+<footer><span>© MUTIW · 3D SCIENCE LAB</span><span>作品作者专用发布入口 · 分片发布版 2026.11.02</span></footer>
 </div>
 </body>
 </html>

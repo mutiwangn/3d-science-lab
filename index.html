@@ -106,10 +106,37 @@ async function decrypt(file,pwd){
 if(!window.crypto||!window.crypto.subtle)throw new Error('当前浏览器不支持安全解密，请通过 HTTPS 使用最新版浏览器。');
 var response=await fetch(file,{cache:'no-store'});if(!response.ok)throw new Error('作品文件无法加载，请检查网络。');
 var data=await response.json();
-if(data.version!==1||data.algorithm!=='AES-256-GCM'||data.kdf!=='PBKDF2-SHA256'||!Number.isInteger(data.iterations)||data.iterations<100000||data.iterations>1000000)throw new Error('作品加密格式不受支持。');
+if((data.version!==1&&data.version!==2)||data.algorithm!=='AES-256-GCM'||data.kdf!=='PBKDF2-SHA256'||!Number.isInteger(data.iterations)||data.iterations<100000||data.iterations>1000000)throw new Error('作品加密格式不受支持。');
+var ciphertext;
+if(data.version===1){
+  if(typeof data.data!=='string')throw new Error('作品密文格式不正确。');
+  ciphertext=bytes64(data.data);
+}else{
+  if(!Array.isArray(data.parts)||data.parts.length<2||data.parts.length>32||!Number.isInteger(data.byteLength)||data.byteLength<1||data.byteLength>65*1024*1024)throw new Error('作品分片清单格式不正确。');
+  var blocks=[],total=0;
+  for(var j=0;j<data.parts.length;j+=3){
+    var group=await Promise.all(data.parts.slice(j,j+3).map(async function(path){
+      if(!validPath(path)||!path.startsWith('./encrypted/'))throw new Error('作品分片路径不安全。');
+      var partResponse=await fetch(path,{cache:'no-store'});
+      if(!partResponse.ok)throw new Error('作品密文分片无法加载，请稍后重试。');
+      var encoded=(await partResponse.text()).trim();
+      if(encoded.length<4||encoded.length>4.2*1024*1024||!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded))throw new Error('作品密文分片内容无效。');
+      var block=bytes64(encoded);
+      if(block.length<1||block.length>3*1024*1024)throw new Error('作品密文分片大小异常。');
+      return block;
+    }));
+    for(var k=0;k<group.length;k++){blocks.push(group[k]);total+=group[k].length;}
+    submit.textContent='读取密文 ' + Math.min(j+3,data.parts.length) + '/' + data.parts.length;
+    if(total>65*1024*1024)throw new Error('作品密文超出浏览器解锁范围。');
+  }
+  if(total!==data.byteLength)throw new Error('作品密文不完整，请刷新后重试。');
+  ciphertext=new Uint8Array(total);
+  for(var pos=0,m=0;m<blocks.length;m++){ciphertext.set(blocks[m],pos);pos+=blocks[m].length;}
+  submit.textContent='正在解密…';
+}
 var material=await crypto.subtle.importKey('raw',new TextEncoder().encode(pwd),'PBKDF2',false,['deriveKey']);
 var key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:bytes64(data.salt),iterations:data.iterations,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['decrypt']);
-var plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes64(data.iv),tagLength:128},key,bytes64(data.data));
+var plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes64(data.iv),tagLength:128},key,ciphertext);
 return new TextDecoder('utf-8',{fatal:true}).decode(plain);
 }
 function openViewer(markup,w){shade.hidden=true;password.value='';document.getElementById('viewer-title').textContent=w.title;viewer.hidden=false;frame.srcdoc=markup;active=null;document.title=w.title+' · MUTIW';}

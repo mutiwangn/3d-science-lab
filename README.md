@@ -32,7 +32,7 @@
 - 第一次使用需在 [GitHub 细粒度令牌页面](https://github.com/settings/personal-access-tokens/new) 创建专用令牌：资源所有者选 `mutiwangn`，只选 `3d-science-lab` 仓库，仓库权限仅开放 **Contents → Read and write**（Metadata 自动为读取），建议 30 天到期。每次打开工作台粘贴令牌，页面不会在持久化存储中保存。
 - 网页虽公开可访问，但只有具有仓库写入权限的令牌才能发布。**不要分享令牌，也不要将其写进 HTML、README 或 Notion**；令牌泄漏请立即在 GitHub 撤销。
 - 可以生成独立的随机口令；发布成功后用「复制 Notion 登记信息」按钮，手动登记到你的[私人密码台账](https://app.notion.com/p/9d44ca7a087c497abdd494c99abfc243)。暂不自动同步 Notion，正式口令不能仅保存于已关闭的上传页面。
-- GitHub 网页原生上传单文件限制 25 MiB。本站上传器使用 GitHub Git 数据 API 来提交加密文件，最高 60 MiB 源 HTML；加密 JSON 会因 Base64 膨胀。GitHub Pages 已发布站点最大 1 GB，若陆续积累较多大作品，应迁移密文到 Cloudflare R2 等对象存储，避免长期把 GitHub 作为大文件仓库。
+- GitHub 网页原生上传单文件限制 25 MiB。本站上传器先在浏览器本地把源 HTML 进行 AES-256-GCM 加密。小文件按旧版 v1 格式上传；大文件自动拆成每片约 3 MiB 的加密二进制数据，并分别转换成约 4 MiB 的 Base64 文本文件，最后一次性提交 v2 清单、分片、公开封面及目录。这样可以规避 GitHub Git 数据 API 拒绝超大单次请求的 422 错误。GitHub Pages 已发布站点最大 1 GB。单个 57.9 MiB 作品加密并 Base64 编码后约占 77.2 MiB；若陆续积累十余个类似大作品，应该迁移密文到 Cloudflare R2 等对象存储，避免长期把 GitHub 作为大文件仓库。
 - 当前仅支持**单体 HTML**，不直接支持 ZIP/GLB 文件夹工程；本地模型/纹理/JS 必须先内嵌。若 HTML 引用了外部 HTTPS 资产，这些资产本身不会被此机制保护。
 
 ## 添加正式作品
@@ -66,7 +66,7 @@
 
 - index.html：公开主页及浏览器解锁器
 - catalog.json：公开展示目录，不含口令
-- encrypted/：加密作品数据
+- encrypted/：加密作品数据（v1 单文件或 v2 加密清单及分片，旧作品继续可解锁）
 - covers/：公开封面
 - tools/encrypt-work.mjs：本地加密发布工具
 - tools/demo-source.html：公开功能演示源文件
