@@ -32,7 +32,7 @@ if (isWithinRoot && !args.includes('--demo')) {
   fail('源 HTML 位于公开仓库目录内！请把原创明文文件放在仓库外，再运行加密工具。');
 }
 const info = await stat(absolute).catch(() => fail('找不到源文件：' + absolute));
-if (info.size > 50 * 1024 * 1024) fail('单个 HTML 不应超过 50 MB；请先优化模型与资源。');
+if (!info.size || info.size > 60 * 1024 * 1024) fail('单体 HTML 必须大于 0 且不超过 60 MiB。');
 const html = await readFile(absolute, 'utf8');
 if (!/<html[\s>]/i.test(html)) fail('文件看起来不是完整的 HTML 文档。');
 if (/(?:src|href)\s*=\s*["'](?!data:|https?:|#|\/\/)[^"']+["']/i.test(html)
@@ -95,18 +95,33 @@ const content = Buffer.concat([cipher.update(html, 'utf8'), cipher.final(), ciph
 key.fill(0);
 password = '';
 
-const envelope = {
-  version: 1,
+const common = {
   algorithm: 'AES-256-GCM',
   kdf: 'PBKDF2-SHA256',
   iterations: 310000,
   salt: salt.toString('base64'),
-  iv: iv.toString('base64'),
-  data: content.toString('base64')
+  iv: iv.toString('base64')
 };
-const output = join(root, 'encrypted', slug + '.json');
-await mkdir(dirname(output), { recursive: true });
-await writeFile(output, JSON.stringify(envelope) + '\n', 'utf8');
+const encryptedDir = join(root, 'encrypted');
+await mkdir(encryptedDir, { recursive: true });
+const chunkBytes = 3 * 1024 * 1024;
+let envelope;
+if (content.length <= chunkBytes) {
+  envelope = {version:1, ...common, data:content.toString('base64')};
+} else {
+  const partDir = join(encryptedDir, slug);
+  await mkdir(partDir, { recursive:true });
+  const parts = [];
+  for (let offset = 0, part = 1; offset < content.length; offset += chunkBytes, part++) {
+    const filename = 'part-' + String(part).padStart(3, '0') + '.b64';
+    const chunkPath = join(partDir, filename);
+    await writeFile(chunkPath, content.subarray(offset, offset + chunkBytes).toString('base64') + '\n', 'utf8');
+    parts.push('./encrypted/' + slug + '/' + filename);
+  }
+  envelope = {version:2, ...common, byteLength:content.length, parts};
+}
+const output = join(encryptedDir, slug + '.json');
+await writeFile(output, JSON.stringify(envelope, null, 2) + '\n', 'utf8');
 
 const previous = previousIndex < 0 ? null : catalog[previousIndex];
 const work = {
@@ -114,14 +129,16 @@ const work = {
   title: option('title', previous?.title || slug),
   grade: option('grade', previous?.grade || '科学探究'),
   description: option('description', previous?.description || '进入三维科学互动实验。'),
-  type: option('type', previous?.type || '3D 互动'),
+  type: option('type', previous?.type || '3D教师演示'),
   cover: option('cover', previous?.cover || './covers/demo-cube.svg'),
   file: './encrypted/' + slug + '.json'
 };
+if (!['3D教师演示', '3D学生操作', '数字工具'].includes(work.type)) fail('类别必须是 3D教师演示、3D学生操作或数字工具。');
 if (args.includes('--demo')) work.demo = true;
 if (previousIndex >= 0) catalog[previousIndex] = work;
 else catalog.push(work);
 await writeFile(catalogPath, JSON.stringify(catalog, null, 2) + '\n', 'utf8');
 console.log('\n已加密：' + output);
 console.log('已更新目录：' + catalogPath);
-console.log('请只提交加密 JSON、公开封面和目录，不要将明文 HTML 上传到公开仓库。');
+console.log('请只提交加密清单、分片、公开封面和作品目录，不要将明文 HTML 上传到公开仓库。');
+console.log('在 GitHub Desktop 中检查改动后 Commit to main → Push origin，才会正式发布。');

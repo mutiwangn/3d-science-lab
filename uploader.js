@@ -13,6 +13,7 @@ const form = $('upload-form');
 const fileInput = $('file');
 const coverInput = $('cover');
 const button = $('publish');
+const localButton = $('local-export');
 let busy = false;
 let lastRecord = null;
 
@@ -73,7 +74,7 @@ async function github(token, path, method = 'GET', body = null) {
       redirect: 'error'
     });
   } catch (error) {
-    fail('无法连接 GitHub API。请检查网络、代理设置，或稍后重试。');
+    fail('浏览器未收到 GitHub API 的 HTTP 响应（网络、代理或浏览器限制；并非已确认令牌无效）。可以稍后重试，或使用下方“GitHub Desktop 本地发布（无需令牌）”。');
   }
   let payload = null;
   try { payload = await response.json(); } catch (error) { /* Errors may be empty. */ }
@@ -128,7 +129,7 @@ function prepareFile(file) {
   if (file.size > MAX_HTML) feedback('文件超过 60 MiB。请缩小模型和纹理，或以后改用对象存储。');
   if (!$('title').value.trim()) $('title').value = file.name.replace(/\.html?$/i, '').slice(0, 70);
 }
-function validate(info, file, cover) {
+function validate(info, file, cover, requireToken = true) {
   if (!file) fail('请先选择作品 HTML 文件。');
   if (!/\.html?$/i.test(file.name)) fail('只支持单体 HTML 文件，不支持 ZIP 或 GLB 直接上传。');
   if (!file.size || file.size > MAX_HTML) fail('HTML 文件必须大于 0 且不超过 60 MiB。');
@@ -136,7 +137,7 @@ function validate(info, file, cover) {
   if (!slugPattern(info.id)) fail('作品编号须为 2–64 位小写字母、数字和连字符。');
   if (!['3D教师演示', '3D学生操作', '数字工具'].includes(info.type)) fail('请选择有效的作品类别。');
   if (info.password.length < 12) fail('作品解锁密码至少 12 个字符，建议使用随机生成。');
-  if (!info.token) fail('请输入 GitHub 细粒度授权令牌。');
+  if (requireToken && !info.token) fail('在线直传需要 GitHub 细粒度授权令牌；也可以选择无需令牌的本地发布。');
   if (cover) {
     if (!/\.(png|jpe?g|webp)$/i.test(cover.name) || !['image/png','image/jpeg','image/webp'].includes(cover.type)) fail('封面只能是 PNG / JPG / WebP 图片。');
     if (!cover.size || cover.size > MAX_COVER) fail('封面不得超过 2 MiB。');
@@ -200,11 +201,8 @@ function decodeCatalog(result) {
 function localDate() {
   return new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 }
-async function publish(event) {
-  event.preventDefault();
-  if (busy) return;
-  const file = fileInput.files?.[0], cover = coverInput.files?.[0] || null;
-  const info = {
+function collectInfo() {
+  return {
     title: $('title').value.trim(),
     id: $('slug').value.trim(),
     grade: $('grade').value.trim() || '科学探究',
@@ -215,10 +213,17 @@ async function publish(event) {
     password: $('work-password').value,
     replace: $('replace').checked
   };
+}
+async function publish(event) {
+  event.preventDefault();
+  if (busy) return;
+  const file = fileInput.files?.[0], cover = coverInput.files?.[0] || null;
+  const info = collectInfo();
   try { validate(info, file, cover); } catch(error) { feedback(error.message); return; }
   if (!window.isSecureContext || !crypto?.subtle) { feedback('请通过 HTTPS 打开页面，并使用支持 Web Crypto 的现代浏览器。'); return; }
   busy = true;
   button.disabled = true;
+  localButton.disabled = true;
   button.textContent = '正在安全发布…';
   $('success').hidden = true;
   feedback('');
@@ -285,8 +290,12 @@ async function publish(event) {
     await github(info.token,'/repos/' + OWNER + '/' + REPO + '/git/refs/heads/main','PATCH',{sha:commit.sha,force:false});
     setStage('已发布成功', '加密文件与作品目录已提交。网页可能需要数分钟更新。', 100);
     $('success').hidden = false;
+    $('success-title').textContent = '✓ 已提交到 GitHub';
+    $('success-note').textContent = 'Pages 部署通常需要稍等片刻。请进入展厅，用新密码验证作品。';
+    $('commit-link').hidden = false;
+    $('local-steps').hidden = true;
     $('commit-link').href = 'https://github.com/' + OWNER + '/' + REPO + '/commit/' + commit.sha;
-    lastRecord = {title:info.title,id:info.id,grade:info.grade,type:info.type,version:info.version,password:info.password,date:localDate(),size:bytesLabel(file.size)};
+    lastRecord = {title:info.title,id:info.id,grade:info.grade,type:info.type,version:info.version,password:info.password,date:localDate(),size:bytesLabel(file.size),status:'已提交 GitHub，待 Pages 部署'};
     $('success').scrollIntoView({behavior:'smooth',block:'nearest'});
   } catch(error) {
     feedback(error?.message || '发布未完成，请检查文件与网络后重试。');
@@ -294,9 +303,139 @@ async function publish(event) {
   } finally {
     busy = false;
     button.disabled = false;
-    button.textContent = '加密并发布 ↗';
+    localButton.disabled = false;
+    button.textContent = '通过 GitHub API 在线发布 ↗';
   }
 }
+
+async function readLocalRepository(directory) {
+  // Never write to an arbitrary selected folder. Check the cloned repository identity.
+  if (directory.name !== REPO) fail('请选择 GitHub Desktop 克隆的“' + REPO + '”文件夹，当前选择的是“' + directory.name + '”。');
+  let readme, index, catalog;
+  try {
+    readme = await (await directory.getFileHandle('README.md')).getFile();
+    index = await (await directory.getFileHandle('index.html')).getFile();
+    catalog = await (await directory.getFileHandle('catalog.json')).getFile();
+  } catch (error) {
+    fail('所选文件夹缺少 README.md、index.html 或 catalog.json。请先在 GitHub Desktop 中克隆 3d-science-lab，并选择仓库根目录。');
+  }
+  const [readmeText, indexText, catalogText] = await Promise.all([
+    readme.text(), index.text(), catalog.text()
+  ]);
+  if (!readmeText.includes('MUTIW · 3D 科学互动实验室') || !indexText.includes('data.version!==2')) {
+    fail('这不是已更新的 3d-science-lab 仓库，或本地版本太旧。请在 GitHub Desktop 中先 Fetch origin / Pull，再重试。');
+  }
+  let items;
+  try { items = JSON.parse(catalogText); } catch (error) { fail('本地 catalog.json 不是有效 JSON。请先修复或重新拉取仓库。'); }
+  if (!Array.isArray(items)) fail('本地 catalog.json 必须是作品数组。');
+  return items;
+}
+async function writeLocalFile(directory, path, data) {
+  // Paths are built from a validated slug; this additionally guards every filesystem write.
+  if (!/^(?:catalog\.json|encrypted\/[a-z0-9-]+\.json|encrypted\/[a-z0-9-]+\/part-\d{3}\.b64|covers\/[a-z0-9-]+\.(?:png|jpg|webp))$/.test(path)) {
+    fail('发布文件路径无效：' + path);
+  }
+  const pieces = path.split('/');
+  let folder = directory;
+  for (let i = 0; i < pieces.length - 1; i++) {
+    folder = await folder.getDirectoryHandle(pieces[i], {create:true});
+  }
+  const handle = await folder.getFileHandle(pieces[pieces.length - 1], {create:true});
+  const writer = await handle.createWritable();
+  try {
+    await writer.write(data);
+    await writer.close();
+  } catch (error) {
+    try { await writer.abort(); } catch (_) { /* Best effort. */ }
+    throw error;
+  }
+}
+async function exportLocal() {
+  if (busy) return;
+  const file = fileInput.files?.[0], cover = coverInput.files?.[0] || null;
+  const info = collectInfo();
+  try { validate(info, file, cover, false); } catch (error) { feedback(error.message); return; }
+  if (!window.isSecureContext || !crypto?.subtle) {
+    feedback('请使用 HTTPS 入口，并在支持本机文件夹授权的 Chrome / Edge 电脑浏览器中操作。');
+    return;
+  }
+  if (typeof window.showDirectoryPicker !== 'function') {
+    feedback('当前浏览器不支持安全选择文件夹。请在电脑的最新版 Chrome 或 Edge 中打开本站，或使用仓库内 tools/encrypt-work.mjs。');
+    return;
+  }
+  // Browser security requires that the directory picker open directly from the user's click.
+  let directory;
+  try {
+    directory = await window.showDirectoryPicker({mode:'readwrite'});
+  } catch (error) {
+    if (error?.name === 'AbortError') { feedback('已取消选择文件夹，没有生成或上传任何作品文件。'); return; }
+    feedback('无法访问文件夹。请授权 Chrome / Edge 读写克隆仓库的目录，再重试。'); return;
+  }
+  busy = true;
+  button.disabled = true;
+  localButton.disabled = true;
+  localButton.textContent = '正在本机加密…';
+  $('success').hidden = true;
+  lastRecord = null;
+  feedback('');
+  try {
+    setStage('1 / 5 · 检查本地仓库', '请确保已在 GitHub Desktop 先 Fetch origin / Pull', 10);
+    const catalog = await readLocalRepository(directory);
+    const existingIndex = catalog.findIndex(item => item && item.id === info.id);
+    if (existingIndex !== -1 && !info.replace) fail('这个作品编号已存在。更新时请勾选“更新已有作品”。');
+    if (existingIndex === -1 && info.replace) fail('本地仓库没有对应编号的作品，不能更新。');
+    setStage('2 / 5 · 在电脑中加密', '仅在此浏览器处理原始 HTML；不会发送到 GitHub API', 28);
+    const html = await file.text();
+    inspectHtml(html);
+    const encrypted = await encryptHtml(html, info.password, info.id);
+    setStage('3 / 5 · 写入加密分片', '文件将写入你选定的本地 3d-science-lab 文件夹', 45);
+    for (let i = 0; i < encrypted.chunks.length; i++) {
+      const part = encrypted.chunks[i];
+      await writeLocalFile(directory, part.path, part.content);
+      const count = i + 1;
+      setStage('3 / 5 · 写入加密分片 ' + count + ' / ' + encrypted.chunks.length,
+        '仅写入本机，不会使用令牌或联网提交', 45 + Math.round(20 * count / encrypted.chunks.length));
+    }
+    await writeLocalFile(directory, 'encrypted/' + info.id + '.json', encrypted.manifest);
+    let coverPath = existingIndex >= 0 ? catalog[existingIndex].cover : './covers/demo-cube.svg';
+    if (cover) {
+      setStage('4 / 5 · 写入公开封面', '封面不加密，请勿包含私人信息', 72);
+      const suffix = cover.name.split('.').pop().toLowerCase().replace('jpeg','jpg');
+      coverPath = './covers/' + info.id + '.' + suffix;
+      await writeLocalFile(directory, 'covers/' + info.id + '.' + suffix, cover);
+    }
+    const work = {
+      id: info.id, title: info.title, grade: info.grade, description: info.description,
+      type: info.type, cover: coverPath, file: './encrypted/' + info.id + '.json'
+    };
+    if (existingIndex !== -1) catalog[existingIndex] = work;
+    else catalog.push(work);
+    setStage('5 / 5 · 更新本地作品目录', '先写密文，最后更新目录；下一步需你在 GitHub Desktop 手动推送', 88);
+    await writeLocalFile(directory, 'catalog.json', JSON.stringify(catalog, null, 2) + '\n');
+    setStage('本机准备完成 · 尚未发布', '请在 GitHub Desktop 中 Commit to main → Push origin，再到主页验证解锁', 100);
+    $('success-title').textContent = '✓ 已在本机准备好加密发布文件';
+    $('success-note').textContent = '尚未上传到 GitHub。请按下方步骤通过 GitHub Desktop 提交并推送。关闭页面前，务必复制密码登记信息到私人 Notion。';
+    $('commit-link').hidden = true;
+    $('local-steps').hidden = false;
+    $('success').hidden = false;
+    lastRecord = {
+      title:info.title, id:info.id, grade:info.grade, type:info.type,
+      version:info.version, password:info.password, date:localDate(),
+      size:bytesLabel(file.size), status:'本机已准备，待 GitHub Desktop 推送'
+    };
+    $('success').scrollIntoView({behavior:'smooth',block:'nearest'});
+  } catch (error) {
+    feedback('本地发布未完成：' + (error?.message || '文件夹读写失败。') +
+      ' 请不要在 GitHub Desktop 中提交不完整的更改；排查后可使用同样的作品编号重新生成。');
+    setStage('本地生成未完成', '没有向 GitHub 提交文件；请检查本地目录与浏览器权限', 0);
+  } finally {
+    busy = false;
+    button.disabled = false;
+    localButton.disabled = false;
+    localButton.textContent = '在本机生成发布文件（无需令牌） ↘';
+  }
+}
+
 async function copyRecord() {
   if (!lastRecord) return;
   const item = lastRecord;
@@ -309,7 +448,7 @@ async function copyRecord() {
     '当前解锁密码：' + item.password,
     '密码更新日期：' + item.date,
     '发布日期：' + item.date,
-    '发布状态：已发布',
+    '发布状态：' + item.status,
     '访问范围：授权访问',
     '网页入口：https://' + OWNER + '.github.io/' + REPO + '/',
     '加密文件路径：encrypted/' + item.id + '.json',
@@ -344,4 +483,5 @@ $('show-password').addEventListener('change', event => {
 });
 $('copy-record').addEventListener('click', copyRecord);
 form.addEventListener('submit', publish);
+localButton.addEventListener('click', exportLocal);
 })();

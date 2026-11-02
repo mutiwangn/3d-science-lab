@@ -9,7 +9,7 @@
 <meta name="referrer" content="no-referrer">
 <title>作品发布工作台 · MUTIW 3D LAB</title>
 <link rel="stylesheet" href="./uploader.css">
-<script src="./uploader.js?v=20261102-chunked-v2" defer></script>
+<script src="./uploader.js?v=20261102-local-v3" defer></script>
 </head>
 <body>
 <div class="shell">
@@ -19,7 +19,7 @@
 </header>
 <main>
   <section class="intro">
-    <div><h1>发布新作品<span class="dot">.</span></h1><p>将完整互动 HTML 在浏览器本地加密、自动分片上传到 3D 科学实验室。原始作品文件不会上传到 GitHub。</p></div>
+    <div><h1>发布新作品<span class="dot">.</span></h1><p>将互动 HTML 在浏览器本地加密。可直接通过 GitHub API 发布；连接不稳定时，也可生成 GitHub Desktop 本地发布文件。原创明文不会上传到 GitHub。</p></div>
     <div class="capacity"><strong>60 MiB</strong><span>单个 HTML 上限</span></div>
   </section>
   <form id="upload-form" autocomplete="off" novalidate>
@@ -45,17 +45,33 @@
     </section>
     <aside class="publish" aria-label="安全发布设置">
       <div class="section-title"><span class="num">03</span><h2>安全发布</h2></div>
-      <div class="field"><label for="token">GitHub 授权令牌 <em>*</em></label><input id="token" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="仅本次打开页面使用" required><small>仅发送至 GitHub 官方 API；不保存于网页或浏览器存储。</small><a class="help-link" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">首次使用：创建专用令牌 ↗</a></div>
+<section class="offline-option" aria-label="GitHub Desktop 本地发布">
+        <span class="recommend">推荐 · 无需令牌</span>
+        <h3>GitHub Desktop 本地发布</h3>
+        <p>适合几十 MiB 的大文件，绕过浏览器访问 GitHub API 的 403、422 或网络连接问题。选择电脑上的仓库文件夹，本网页只将<strong>加密分片、公开封面和作品目录</strong>写入本机。</p>
+        <button type="button" class="offline-button" id="local-export">在本机生成发布文件（无需令牌） ↘</button>
+        <small>请先在 <a href="https://desktop.github.com/" target="_blank" rel="noopener noreferrer">GitHub Desktop</a> 中登录并克隆 <code>mutiwangn/3d-science-lab</code>，先 Fetch origin / Pull。点击后选择克隆的 <code>3d-science-lab</code> 根目录。需要电脑端 Chrome / Edge。</small>
+        <small class="manual-step">生成成功<strong>不等于正式发布</strong>：还需回到 GitHub Desktop 检查改动，Commit to main → Push origin。</small>
+      </section>
+      <div class="divider"></div>
+      <p class="online-label">备用 · GitHub API 在线直传</p>
+      <div class="field"><label for="token">GitHub 授权令牌（仅在线直传需要）</label><input id="token" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="本地发布时留空"><small>仅发送至 GitHub 官方 API；不保存于网页或浏览器存储。</small><a class="help-link" href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">首次使用：创建专用令牌 ↗</a></div>
       <div class="divider"></div>
       <div class="field"><label for="work-password">作品解锁密码 <em>*</em></label><div class="password-row"><input id="work-password" type="password" minlength="12" autocomplete="new-password" spellcheck="false" placeholder="至少 12 位" required><button id="generate" type="button" class="secondary">随机生成</button></div><label class="checkline compact"><input id="show-password" type="checkbox"><span>显示当前口令</span></label></div>
       <label class="checkline replace"><input id="replace" type="checkbox"><span>更新已有作品（沿用同一作品编号）</span></label>
       <p class="privacy"><span aria-hidden="true">●</span> 文件在本机使用 AES-256-GCM 加密，只有密文、公开封面和作品目录进入 GitHub。</p>
-      <button class="publish-button" id="publish" type="submit">加密并发布 <span aria-hidden="true">↗</span></button>
+      <button class="publish-button" id="publish" type="submit">通过 GitHub API 在线发布 <span aria-hidden="true">↗</span></button>
       <div class="progress" id="progress" hidden role="status" aria-live="polite"><strong id="stage">准备中…</strong><div class="progress-track"><span id="progress-fill"></span></div><p id="progress-note"></p></div>
       <p class="feedback" id="feedback" role="alert" aria-live="assertive"></p>
       <div class="success" id="success" hidden>
-        <strong>✓ 已提交到 GitHub</strong>
-        <p>Pages 部署通常需要稍等片刻。请自行打开展厅，使用刚设置的密码验证作品。</p>
+        <strong id="success-title">✓ 已提交到 GitHub</strong>
+        <p id="success-note">Pages 部署通常需要稍等片刻。请自行打开展厅，使用刚设置的密码验证作品。</p>
+        <ol id="local-steps" hidden class="local-steps">
+          <li>打开 GitHub Desktop，确认修改仅包括 <code>encrypted/</code>、<code>catalog.json</code> 和可选 <code>covers/</code>，不要提交原创明文 HTML。</li>
+          <li>点击 <strong>Commit to main</strong>，然后点击 <strong>Push origin</strong>。</li>
+          <li>等待 GitHub Pages 部署；在作品展厅用新密码试解锁。</li>
+          <li>返回此页，复制登记信息到私人 Notion 台账；确认已推送后，将台账状态改为“已发布”。</li>
+        </ol>
         <a id="commit-link" target="_blank" rel="noopener noreferrer">查看本次提交 ↗</a>
         <a href="./" target="_blank" rel="noopener noreferrer">打开作品展厅 ↗</a>
         <button type="button" id="copy-record" class="record-button">复制 Notion 登记信息</button>
@@ -67,7 +83,7 @@
   </form>
   <p class="bottom-note">仅支持已经内嵌资源的单体 HTML。请保留你电脑上的未加密原文件；GitHub Pages 整站容量有限，不适合作为大量大模型文件的长期存储。</p>
 </main>
-<footer><span>© MUTIW · 3D SCIENCE LAB</span><span>作品作者专用发布入口 · 分片发布版 2026.11.02</span></footer>
+<footer><span>© MUTIW · 3D SCIENCE LAB</span><span>作品作者专用发布入口 · GitHub 双通道发布版 2026.11.02</span></footer>
 </div>
 </body>
 </html>
