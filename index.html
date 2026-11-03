@@ -39,14 +39,36 @@ h2{font-size:clamp(25px,2.6vw,35px);margin:0;line-height:1.25}.count{font-size:1
 .foot{display:flex;align-items:center;justify-content:space-between;color:#9ab9c1;font-size:12px;margin-top:17px}.foot strong{color:var(--gold);font-size:13px}
 .empty{border:1px dashed #accdc750;border-radius:20px;text-align:center;color:var(--muted);padding:50px 20px;line-height:1.9}
 footer{padding:25px 0 32px;border-top:1px solid var(--line);display:flex;gap:15px;justify-content:space-between;color:#88a1ab;font-size:13px}footer strong{color:#d5eeeb}
-.shade{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:22px;background:#04121bdb;backdrop-filter:blur(9px)}
-.dialog{width:min(100%,430px);padding:30px;background:linear-gradient(145deg,#193846,#102330);border:1px solid #89e1d363;border-radius:25px;box-shadow:0 35px 95px #0009;position:relative}
+.shade{position:fixed;inset:0;z-index:40;display:grid;place-items:center;padding:22px;background:#04121bdb;backdrop-filter:blur(9px)}
+.dialog{width:min(100%,430px);max-height:calc(100vh - 28px);max-height:calc(100dvh - 28px);overflow-y:auto;padding:30px;background:linear-gradient(145deg,#193846,#102330);border:1px solid #89e1d363;border-radius:25px;box-shadow:0 35px 95px #0009;position:relative}
 .x{border:0;background:#ffffff15;color:#f5ffff;border-radius:11px;font-size:23px;width:37px;height:37px;line-height:1}.dialog>.x{position:absolute;right:23px;top:23px}
 .lock-symbol{height:54px;width:54px;display:grid;place-items:center;border:1px solid #83e4d369;border-radius:17px;background:#78dac723;color:#8fe9d6;font-size:28px;margin-bottom:21px}
 .dialog h2{font-size:26px;padding-right:24px}.dialog p{font-size:14px;line-height:1.7;color:#aac4cc}
 .dialog label{font-size:13px;font-weight:800;display:block;margin:25px 0 10px}.passline{display:flex;gap:9px}
 .passline input{min-width:0;width:100%;height:53px;padding:0 14px;border:1px solid #9ac5c66b;border-radius:11px;background:#071e2d;color:white}.passline button{white-space:nowrap;padding:0 19px}
 .error{min-height:18px!important;margin:13px 0 0!important;color:#ffc0ac!important}
+
+/* 牛顿摆：传递运动的科学加载动画 */
+.science-loader{padding:8px 0 2px;text-align:center}
+.cradle{position:relative;width:240px;height:171px;margin:5px auto 0;background:radial-gradient(ellipse at 50% 78%,#62d7c917,transparent 70%)}
+.cradle .beam{position:absolute;left:10px;right:10px;top:12px;height:9px;border-radius:9px;background:linear-gradient(180deg,#c2fbef,#327a83);box-shadow:0 2px 10px #70e7d133}
+.cradle .pendulum{position:absolute;top:20px;width:40px;height:136px;transform-origin:20px 0}
+.cradle .pendulum:before{content:"";position:absolute;top:0;left:19px;width:2px;height:99px;background:linear-gradient(#bafbf0,#448994)}
+.cradle .pendulum:after{content:"";position:absolute;top:98px;left:0;width:40px;height:40px;border-radius:50%;border:1px solid #baf9f3a3;background:radial-gradient(circle at 30% 24%,#fff6c8 0,#b4fae9 14%,#63c9bb 48%,#236c79 80%,#14465e 100%);box-shadow:inset -5px -5px 9px #063d4b80,0 5px 12px #020e1670}
+.cradle .p1{left:20px;animation:cradle-left 2.45s ease-in-out infinite}
+.cradle .p2{left:60px}.cradle .p3{left:100px}.cradle .p4{left:140px}
+.cradle .p5{left:180px;animation:cradle-right 2.45s ease-in-out infinite}
+@keyframes cradle-left{0%,100%{transform:rotate(-28deg)}20%,62%{transform:rotate(0deg)}84%{transform:rotate(-28deg)}}
+@keyframes cradle-right{0%,20%,62%,100%{transform:rotate(0deg)}41%{transform:rotate(28deg)}}
+.science-note{color:var(--mint);font-size:12px;letter-spacing:.08em;margin:0 0 15px}
+.loading-message{color:#effaf8!important;font-size:17px!important;font-weight:800;margin:0 0 14px!important}
+.load-track{height:9px;overflow:hidden;border-radius:100px;border:1px solid #8cd7cd30;background:#091d2a;position:relative}
+.load-fill{display:block;height:100%;width:0;border-radius:100px;background:linear-gradient(90deg,#50cdb8,#b8ffde);transition:width .2s ease;box-shadow:0 0 15px #7debd099}
+.load-track.indeterminate .load-fill{width:36%!important;animation:science-progress 1.5s ease-in-out infinite}
+@keyframes science-progress{0%{transform:translateX(-110%)}100%{transform:translateX(310%)}}
+.loading-detail{color:#aac7c9!important;font-size:12px!important;min-height:20px;margin:11px 0 0!important}
+@media(prefers-reduced-motion:reduce){.cradle .pendulum,.load-track.indeterminate .load-fill{animation:none!important}.cradle .p1{transform:rotate(-17deg)}.cradle .p5{transform:rotate(17deg)}}
+
 .viewer{position:fixed;z-index:30;inset:0;background:#0c1a27;display:flex;flex-direction:column}.viewerbar{height:64px;background:#0b2531;display:flex;align-items:center;gap:14px;padding:0 17px;border-bottom:1px solid var(--line)}
 .viewerbar button{color:var(--text);background:#ffffff12;border:1px solid #ffffff20;padding:10px 14px;border-radius:10px}.viewerbar strong{font-size:16px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.spacer{flex:1}.viewer iframe{width:100%;flex:1;border:0;background:#0c2230}
 @media(max-width:950px){.hero{gap:22px}.art{height:224px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -74,6 +96,13 @@ footer{padding:25px 0 32px;border-top:1px solid var(--line);display:flex;gap:15p
 <button class="x" id="close" type="button" aria-label="关闭">×</button>
 <div class="lock-symbol" aria-hidden="true">🔒</div><h2 id="unlock-title">解锁作品</h2>
 <form id="form" autocomplete="off"><label for="password">作品口令</label><div class="passline"><input id="password" type="password" autocomplete="off" placeholder="请输入解锁口令" required spellcheck="false"><button class="primary" id="submit" type="submit">解锁</button></div><p class="error" id="error" role="status" aria-live="polite"></p></form>
+<div class="science-loader" id="science-loader" hidden>
+<div class="cradle" aria-hidden="true"><span class="beam"></span><span class="pendulum p1"></span><span class="pendulum p2"></span><span class="pendulum p3"></span><span class="pendulum p4"></span><span class="pendulum p5"></span></div>
+<p class="science-note">牛顿摆 · 运动的传递</p>
+<p class="loading-message" id="loading-message" role="status" aria-live="polite">正在准备互动实验…</p>
+<div class="load-track indeterminate" id="load-track" role="progressbar" aria-label="作品数据读取进度" aria-valuemin="0" aria-valuemax="100"><span class="load-fill" id="load-fill"></span></div>
+<p class="loading-detail" id="loading-detail">请稍候</p>
+</div>
 </section></div>
 <section class="viewer" id="viewer" hidden aria-label="互动作品"><div class="viewerbar"><button id="back" type="button">← 返回</button><strong id="viewer-title"></strong><span class="spacer"></span><button id="fullscreen" type="button">⛶ 全屏</button></div><iframe id="frame" title="三维互动作品" allow="camera; microphone; autoplay; fullscreen" allowfullscreen></iframe></section>
 <script>
@@ -82,6 +111,15 @@ footer{padding:25px 0 32px;border-top:1px solid var(--line);display:flex;gap:15p
 var grid=document.getElementById('grid'),shade=document.getElementById('shade'),viewer=document.getElementById('viewer');
 var password=document.getElementById('password'),error=document.getElementById('error'),submit=document.getElementById('submit');
 var frame=document.getElementById('frame'),active=null,previousFocus=null,busy=false;
+var form=document.getElementById('form'),loader=document.getElementById('science-loader'),loadMessage=document.getElementById('loading-message'),loadDetail=document.getElementById('loading-detail'),loadTrack=document.getElementById('load-track'),loadFill=document.getElementById('load-fill');
+function loadingStep(message,done,total){
+  loadMessage.textContent=message;
+  if(Number.isInteger(total)&&total>0){var pct=Math.round(100*done/total);loadTrack.classList.remove('indeterminate');loadTrack.setAttribute('aria-valuenow',String(pct));loadFill.style.width=pct+'%';loadDetail.textContent='已读取 '+done+' / '+total+' 份数据';}
+  else{loadTrack.classList.add('indeterminate');loadTrack.removeAttribute('aria-valuenow');loadFill.style.width='36%';loadDetail.textContent='请稍候，正在准备实验';}
+}
+function showLoading(){form.hidden=true;loader.hidden=false;loadingStep('正在启动科学实验…');}
+function hideLoading(){loader.hidden=true;form.hidden=false;}
+function nextPaint(){return new Promise(function(resolve){requestAnimationFrame(function(){setTimeout(resolve,0);});});}
 function el(tag,cls,text){var n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;}
 function validPath(s){return typeof s==='string'&&/^[a-zA-Z0-9_./-]+$/.test(s)&&!s.includes('..')&&!s.startsWith('/');}
 function render(items){
@@ -97,7 +135,7 @@ card.addEventListener('click',function(){previousFocus=card;openDialog(w);});gri
 });
 document.getElementById('count').textContent=count+' 个作品';document.getElementById('empty').hidden=count>0;
 }
-function openDialog(w){active=w;busy=false;password.value='';error.textContent='';submit.disabled=false;submit.textContent='解锁';document.getElementById('unlock-title').textContent=w.title;shade.hidden=false;document.body.style.overflow='hidden';password.focus();}
+function openDialog(w){active=w;busy=false;hideLoading();password.value='';error.textContent='';submit.disabled=false;submit.textContent='解锁';document.getElementById('unlock-title').textContent=w.title;shade.hidden=false;document.body.style.overflow='hidden';password.focus();}
 function closeDialog(){if(busy)return;shade.hidden=true;active=null;password.value='';document.body.style.overflow='';if(previousFocus)previousFocus.focus();}
 function bytes64(s){var raw=atob(s),arr=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)arr[i]=raw.charCodeAt(i);return arr;}
 async function decrypt(file,pwd){
@@ -108,10 +146,12 @@ if((data.version!==1&&data.version!==2)||data.algorithm!=='AES-256-GCM'||data.kd
 var ciphertext;
 if(data.version===1){
   if(typeof data.data!=='string')throw new Error('作品密文格式不正确。');
+  loadingStep('正在读取加密数据');await nextPaint();
   ciphertext=bytes64(data.data);
 }else{
   if(!Array.isArray(data.parts)||data.parts.length<2||data.parts.length>32||!Number.isInteger(data.byteLength)||data.byteLength<1||data.byteLength>65*1024*1024)throw new Error('作品分片清单格式不正确。');
   var blocks=[],total=0;
+  loadingStep('正在读取加密数据',0,data.parts.length);await nextPaint();
   for(var j=0;j<data.parts.length;j+=3){
     var group=await Promise.all(data.parts.slice(j,j+3).map(async function(path){
       if(!validPath(path)||!path.startsWith('./encrypted/'))throw new Error('作品分片路径不安全。');
@@ -119,34 +159,46 @@ if(data.version===1){
       if(!partResponse.ok)throw new Error('作品密文分片无法加载，请稍后重试。');
       var encoded=(await partResponse.text()).trim();
       if(encoded.length<4||encoded.length>4.2*1024*1024||!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded))throw new Error('作品密文分片内容无效。');
-      var block=bytes64(encoded);
-      if(block.length<1||block.length>3*1024*1024)throw new Error('作品密文分片大小异常。');
-      return block;
+      return encoded;
     }));
-    for(var k=0;k<group.length;k++){blocks.push(group[k]);total+=group[k].length;}
-    submit.textContent='读取密文 ' + Math.min(j+3,data.parts.length) + '/' + data.parts.length;
-    if(total>65*1024*1024)throw new Error('作品密文超出浏览器解锁范围。');
+    for(var k=0;k<group.length;k++){
+      var block=bytes64(group[k]);blocks.push(block);total+=block.length;
+      if(block.length<1||block.length>3*1024*1024||total>65*1024*1024)throw new Error('作品密文分片大小异常。');
+      loadingStep('正在读取加密数据',j+k+1,data.parts.length);
+      await nextPaint();
+    }
   }
   if(total!==data.byteLength)throw new Error('作品密文不完整，请刷新后重试。');
   ciphertext=new Uint8Array(total);
   for(var pos=0,m=0;m<blocks.length;m++){ciphertext.set(blocks[m],pos);pos+=blocks[m].length;}
-  submit.textContent='正在解密…';
 }
+loadingStep('正在验证口令并解密');await nextPaint();
 var material=await crypto.subtle.importKey('raw',new TextEncoder().encode(pwd),'PBKDF2',false,['deriveKey']);
 var key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:bytes64(data.salt),iterations:data.iterations,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['decrypt']);
 var plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes64(data.iv),tagLength:128},key,ciphertext);
+loadingStep('正在开启互动实验');await nextPaint();
 return new TextDecoder('utf-8',{fatal:true}).decode(plain);
 }
-function openViewer(markup,w){shade.hidden=true;password.value='';document.getElementById('viewer-title').textContent=w.title;viewer.hidden=false;frame.srcdoc=markup;active=null;document.title=w.title+' · MUTIW';}
+async function openViewer(markup,w){
+document.getElementById('viewer-title').textContent=w.title;viewer.hidden=false;
+var ready=new Promise(function(resolve){
+  var finished=false,timer;
+  function reveal(){if(finished)return;finished=true;clearTimeout(timer);frame.removeEventListener('load',reveal);resolve();}
+  frame.addEventListener('load',reveal);timer=setTimeout(reveal,8000);
+});
+frame.srcdoc=markup;
+await ready;
+shade.hidden=true;password.value='';active=null;document.title=w.title+' · MUTIW';
+}
 function closeViewer(){frame.removeAttribute('srcdoc');frame.src='about:blank';viewer.hidden=true;document.body.style.overflow='';document.title='3D 科学实验室 · MUTIW';if(previousFocus)previousFocus.focus();}
 document.getElementById('close').addEventListener('click',closeDialog);
 shade.addEventListener('click',function(e){if(e.target===shade)closeDialog();});
 document.getElementById('form').addEventListener('submit',async function(e){
 e.preventDefault();if(busy||!active)return;
-var w=active;busy=true;submit.disabled=true;submit.textContent='解锁中…';error.textContent='';
-try{var html=await decrypt(w.file,password.value);openViewer(html,w);}
-catch(ex){error.textContent=ex.name==='OperationError'?'口令不正确，请再试一次。':(ex.message||'解锁失败，请稍后重试。');password.focus();password.select();}
-finally{busy=false;submit.disabled=false;submit.textContent='解锁';}
+var w=active;busy=true;submit.disabled=true;submit.textContent='解锁中…';error.textContent='';showLoading();
+try{await nextPaint();var html=await decrypt(w.file,password.value);await openViewer(html,w);}
+catch(ex){error.textContent=ex.name==='OperationError'?'口令不正确，请再试一次。':(ex.message||'解锁失败，请稍后重试。');hideLoading();password.focus();password.select();}
+finally{busy=false;submit.disabled=false;submit.textContent='解锁';hideLoading();}
 });
 document.getElementById('back').addEventListener('click',closeViewer);
 document.getElementById('fullscreen').addEventListener('click',function(){var fn=viewer.requestFullscreen||viewer.webkitRequestFullscreen;if(fn){var result=fn.call(viewer);if(result&&result.catch)result.catch(function(){});}});
